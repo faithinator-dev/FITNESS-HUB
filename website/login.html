@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FITNESS HUB - Portal Login</title>
+    <link rel="shortcut icon" href="assets/images/image.png" type="image/x-icon">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="auth.css" />
+  </head>
+  <body>
+    <!-- Header Navigation -->
+    <header>
+      <div class="nav-container">
+        <a href="index.html" class="logo">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#CCFF00"
+            stroke-width="2.5"
+          >
+            <path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12" />
+          </svg>
+          <span>FITNESS HUB</span>
+        </a>
+        <div class="nav-right">
+          <span class="text-muted">Don't have an account?</span>
+          <a href="signup.html" class="btn-lime-sm">Sign Up</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Auth Container -->
+    <main class="auth-wrapper">
+      <div class="auth-card">
+        <!-- Left Side Branding / Image -->
+        <div class="auth-visual">
+          <div class="visual-overlay"></div>
+          <img
+            src="assets/images/auth-bg.jpg"
+            alt="Gym Motivation"
+            class="visual-img"
+            onerror="
+              this.src =
+                'https://via.placeholder.com/600x800/12141A/CCFF00?text=FITNESS+HUB'
+            "
+          />
+          <div class="visual-text">
+            <h2>Welcome Back to <span class="highlight">Fitness Hub</span></h2>
+            <p>
+              Track your workouts, manage subscriptions, and push your limits
+              daily.
+            </p>
+          </div>
+        </div>
+
+        <!-- Right Side Login Form -->
+        <div class="auth-form-container">
+          <div class="form-header">
+            <h2>Sign In</h2>
+            <p>Enter your credentials to access your portal</p>
+          </div>
+
+          <p id="selected-plan-notice" class="selected-plan-notice" hidden></p>
+
+          <div id="alert-box" class="alert-box"></div>
+
+          <form id="login-form">
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input
+                type="email"
+                id="email"
+                required
+                placeholder="name@example.com"
+              />
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="password">Password</label>
+                <a href="#" class="forgot-link">Forgot password?</a>
+              </div>
+              <input
+                type="password"
+                id="password"
+                required
+                placeholder="••••••••"
+              />
+            </div>
+
+            <button type="submit" id="submit-btn" class="btn-lime-full">
+              Sign In to Dashboard
+            </button>
+          </form>
+
+          <p class="auth-footer text-muted">
+            Need help? <a href="index.html#contact">Contact Support</a>
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const API_BASE_URL = "http://localhost/fitlife_api/backend";
+      const planOptions = {
+        basic: { id: "basic", name: "Basic", price: "$299" },
+        standard: { id: "standard", name: "Standard", price: "$399" },
+        premium: { id: "premium", name: "Premium", price: "$500" },
+      };
+      const requestedPlanId = new URLSearchParams(window.location.search).get("plan");
+      const requestedPlan = planOptions[requestedPlanId] || null;
+      const planNotice = document.getElementById("selected-plan-notice");
+      const signupLink = document.querySelector('.nav-right a[href="signup.html"]');
+      if (requestedPlan) {
+        planNotice.textContent = `You chose the ${requestedPlan.name} plan (${requestedPlan.price}). Sign in to continue your demo membership setup.`;
+        planNotice.hidden = false;
+        if (signupLink) signupLink.href = `signup.html?plan=${requestedPlan.id}`;
+      }
+
+      document
+        .getElementById("login-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const alertBox = document.getElementById("alert-box");
+          const submitBtn = document.getElementById("submit-btn");
+
+          alertBox.style.display = "none";
+          submitBtn.disabled = true;
+          submitBtn.innerText = "Signing In...";
+
+          const email = document.getElementById("email").value.trim();
+          const password = document.getElementById("password").value.trim();
+
+          try {
+            const response = await fetch(`${API_BASE_URL}/login.php`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.status === "success") {
+              // Save user and token
+              localStorage.setItem("fitlife_user", JSON.stringify(result.user));
+              if (requestedPlan && (result.user.role || "member").toLowerCase() === "member") {
+                localStorage.setItem("fitlife_demo_plan", JSON.stringify({
+                  ...requestedPlan,
+                  status: "Demo selected",
+                  selectedAt: new Date().toISOString(),
+                }));
+              } else {
+                localStorage.removeItem("fitlife_demo_plan");
+              }
+              if (result.token) {
+                localStorage.setItem("fitlife_token", result.token);
+              }
+
+              // Redirect based on role safely
+              const userRole = (result.user.role || "").toLowerCase();
+              if (userRole === "admin") {
+                window.location.href = "admin-dashboard.html";
+              } else if (userRole === "trainer") {
+                window.location.href = "trainer-dashboard.html";
+              } else {
+                window.location.href = "member-dashboard.html";
+              }
+            } else {
+              showAlert(result.message || "Invalid credentials.");
+            }
+          } catch (error) {
+            showAlert(
+              "Cannot connect to API server. Ensure XAMPP Apache is running.",
+            );
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Sign In to Dashboard";
+          }
+        });
+
+      function showAlert(msg) {
+        const alertBox = document.getElementById("alert-box");
+        alertBox.innerText = msg;
+        alertBox.style.display = "block";
+      }
+    </script>
+  </body>
+</html>
+

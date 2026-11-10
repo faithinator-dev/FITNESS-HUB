@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FITNESS HUB - Admin Operations Panel</title>
+    <link
+      rel="shortcut icon"
+      href="assets/images/image.png"
+      type="image/x-icon"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="admin-dashboard.css" />
+  </head>
+  <body>
+    <!-- Top Navigation Header -->
+    <header>
+      <div class="nav-container">
+        <a href="index.html" class="logo">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#CCFF00"
+            stroke-width="2.5"
+          >
+            <path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12" />
+          </svg>
+          <span>FITNESS HUB <span class="badge-admin">ADMIN</span></span>
+        </a>
+        <div class="user-profile-menu">
+          <span id="admin-greeting" class="user-name">Head Administrator</span>
+          <button onclick="handleLogout()" class="btn-logout">Sign Out</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard-wrapper">
+      <!-- Hero Title Banner -->
+      <section class="welcome-banner">
+        <div class="welcome-text">
+          <h1>Executive <span class="highlight">Control Panel</span></h1>
+          <p>
+            Manage registered gym members, process registrations, and monitor
+            real-time check-in stats.
+          </p>
+        </div>
+        <div class="status-indicator">
+          <span class="pulse-dot"></span>
+          SYSTEM ONLINE (PHP REST API)
+        </div>
+      </section>
+
+      <!-- Dynamic System Stats Row -->
+      <section class="stats-row">
+        <div class="stat-card">
+          <p class="stat-label">Active Members</p>
+          <h3 id="stat-active-members" class="stat-value highlight">--</h3>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Today's Check-Ins</p>
+          <h3 id="stat-today-checkins" class="stat-value">--</h3>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Active Plans</p>
+          <h3 class="stat-value">3 Tiered Plans</h3>
+        </div>
+      </section>
+
+      <!-- New Member Registration Form -->
+      <section class="dashboard-card full-width" style="margin-bottom: 2rem">
+        <div class="card-header">
+          <h3>Register New Member</h3>
+        </div>
+        <div class="card-body">
+          <div id="reg-alert" class="alert-message"></div>
+          <form id="admin-register-form" class="form-grid">
+            <div class="form-group">
+              <label for="reg-name">Full Name</label>
+              <input
+                type="text"
+                id="reg-name"
+                required
+                placeholder="e.g. Sarah Connor"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="reg-email">Email Address</label>
+              <input
+                type="email"
+                id="reg-email"
+                required
+                placeholder="sarah@example.com"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="reg-phone">Phone Number</label>
+              <input
+                type="tel"
+                id="reg-phone"
+                required
+                placeholder="+1 555-0199"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="reg-role">Account Role</label>
+              <select
+                id="reg-role"
+                style="
+                  width: 100%;
+                  padding: 0.85rem 1rem;
+                  background: #1a1d24;
+                  border: 1px solid var(--card-border);
+                  border-radius: 10px;
+                  color: var(--text-white);
+                  font-size: 0.95rem;
+                  outline: none;
+                "
+              >
+                <option value="member">Gym Member</option>
+                <option value="trainer">Trainer / Fitness Coach</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="reg-password">Initial Password</label>
+              <input
+                type="password"
+                id="reg-password"
+                required
+                placeholder="••••••••"
+              />
+            </div>
+
+            <div class="form-group full-row">
+              <button type="submit" id="reg-btn" class="btn-lime-full">
+                Register Account
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Active Members Directory Table -->
+      <section class="dashboard-card full-width">
+        <div class="card-header flex-between">
+          <h3>Registered Members Directory</h3>
+          <button onclick="loadMembersDirectory()" class="btn-refresh">
+            🔄 Refresh Directory
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Member ID</th>
+                <th>Full Name</th>
+                <th>Email Address</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Quick Action</th>
+              </tr>
+            </thead>
+            <tbody id="members-table-body">
+              <tr>
+                <td colspan="6" class="text-center text-muted">
+                  Loading members list from database...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const API_BASE_URL = "http://localhost/fitlife_api/backend";
+      let currentUser = null;
+
+      // Session Protection Guard
+      document.addEventListener("DOMContentLoaded", () => {
+        const storedUser = localStorage.getItem("fitlife_user");
+
+        if (!storedUser) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        currentUser = JSON.parse(storedUser);
+
+        // Optional role verification
+        if (currentUser.role !== "admin" && currentUser.role !== "trainer") {
+          window.location.href = "member-dashboard.html";
+          return;
+        }
+
+        document.getElementById("admin-greeting").innerText =
+          `${currentUser.name || "Admin"} (${currentUser.role.toUpperCase()})`;
+
+        // Load initial dashboard data
+        loadDashboardStats();
+        loadMembersDirectory();
+
+        // Bind Registration Form
+        document
+          .getElementById("admin-register-form")
+          .addEventListener("submit", handleMemberRegistration);
+      });
+
+      // Load System Stats
+      async function loadDashboardStats() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/stats.php`);
+          const result = await response.json();
+
+          if (response.ok && result.status === "success") {
+            document.getElementById("stat-active-members").innerText =
+              result.data.active_members || "0";
+            document.getElementById("stat-today-checkins").innerText =
+              result.data.today_checkins || "0";
+          }
+        } catch (error) {
+          console.error("Error loading admin stats:", error);
+        }
+      }
+
+      // Fetch & Render Members Directory
+      async function loadMembersDirectory() {
+        const tbody = document.getElementById("members-table-body");
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Fetching latest database records...</td></tr>`;
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/members.php`);
+          const result = await response.json();
+
+          if (
+            response.ok &&
+            result.status === "success" &&
+            result.data.length > 0
+          ) {
+            tbody.innerHTML = result.data
+              .map(
+                (member) => `
+                        <tr>
+                            <td>#MEM-${member.id}</td>
+                            <td><strong>${member.name}</strong></td>
+                            <td>${member.email}</td>
+                            <td>${member.phone || "N/A"}</td>
+                            <td><span class="status-pill active">${member.status || "Active"}</span></td>
+                            <td>
+                                <button class="btn-action-checkin" onclick="adminCheckinMember(${member.id})">⚡ Check-In</button>
+                            </td>
+                        </tr>
+                    `,
+              )
+              .join("");
+          } else {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No members recorded yet in the database.</td></tr>`;
+          }
+        } catch (error) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Failed to connect to PHP API server. Check XAMPP.</td></tr>`;
+        }
+      }
+
+      // Register New Member
+      async function handleMemberRegistration(e) {
+        e.preventDefault();
+        const alertBox = document.getElementById("reg-alert");
+        const regBtn = document.getElementById("reg-btn");
+
+        alertBox.style.display = "none";
+        regBtn.disabled = true;
+        regBtn.innerText = "Registering Member...";
+
+        const payload = {
+          name: document.getElementById("reg-name").value.trim(),
+          email: document.getElementById("reg-email").value.trim(),
+          phone: document.getElementById("reg-phone").value.trim(),
+          password: document.getElementById("reg-password").value.trim(),
+          role: document.getElementById("reg-role")
+            ? document.getElementById("reg-role").value
+            : "member",
+        };
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/register_member.php`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.status === "success") {
+            showAlert("Member registered successfully!", "success");
+            document.getElementById("admin-register-form").reset();
+            loadDashboardStats();
+            loadMembersDirectory();
+          } else {
+            showAlert(result.message || "Failed to register member.", "error");
+          }
+        } catch (error) {
+          showAlert("Server error during registration.", "error");
+        } finally {
+          regBtn.disabled = false;
+          regBtn.innerText = "Register Account";
+        }
+      }
+
+      // Admin Quick Check-In Action
+      async function adminCheckinMember(memberId) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/attendance.php`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ member_id: memberId }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.status === "success") {
+            alert("Attendance checked in successfully!");
+            loadDashboardStats();
+          } else {
+            alert("Check-in error: " + (result.message || "Failed to record."));
+          }
+        } catch (error) {
+          alert("Server connection error during check-in.");
+        }
+      }
+
+      function showAlert(msg, type) {
+        const alertBox = document.getElementById("reg-alert");
+        alertBox.innerText = msg;
+        alertBox.className = `alert-message ${type}`;
+        alertBox.style.display = "block";
+      }
+
+      // Logout Handler
+      function handleLogout() {
+        localStorage.removeItem("fitlife_user");
+        localStorage.removeItem("fitlife_token");
+        window.location.href = "login.html";
+      }
+    </script>
+  </body>
+</html>

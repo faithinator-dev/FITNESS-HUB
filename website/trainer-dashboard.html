@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FITNESS HUB - Trainer Operations Portal</title>
+    <link
+      rel="shortcut icon"
+      href="assets/images/image.png"
+      type="image/x-icon"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="trainer-dashboard.css" />
+  </head>
+  <body>
+    <!-- Top Navigation Header -->
+    <header>
+      <div class="nav-container">
+        <a href="index.html" class="logo">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#CCFF00"
+            stroke-width="2.5"
+          >
+            <path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12" />
+          </svg>
+          <span>FITNESS HUB <span class="badge-trainer">TRAINER</span></span>
+        </a>
+        <div class="user-profile-menu">
+          <span id="trainer-greeting" class="user-name">Welcome, Coach</span>
+          <button onclick="handleLogout()" class="btn-logout">Sign Out</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard-wrapper">
+      <!-- Hero Title Banner -->
+      <section class="welcome-banner">
+        <div class="welcome-text">
+          <h1>Trainer <span class="highlight">Command Center</span></h1>
+          <p>
+            Assign customized workout plans, review assigned members, and
+            monitor training check-ins.
+          </p>
+        </div>
+        <div class="status-indicator">
+          <span class="pulse-dot"></span>
+          ACTIVE COACH PORTAL
+        </div>
+      </section>
+
+      <!-- Stats Overview Row -->
+      <section class="stats-row">
+        <div class="stat-card">
+          <p class="stat-label">Assigned Trainees</p>
+          <h3 id="stat-trainee-count" class="stat-value highlight">--</h3>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Routines Created</p>
+          <h3 id="stat-routines-count" class="stat-value">--</h3>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Specialization</p>
+          <h3 id="stat-specialization" class="stat-value">
+            Strength & Conditioning
+          </h3>
+        </div>
+      </section>
+
+      <!-- Assign Workout Plan Form Section -->
+      <section class="dashboard-card full-width" style="margin-bottom: 2rem">
+        <div class="card-header">
+          <h3>Create & Assign Workout Routine</h3>
+        </div>
+        <div class="card-body">
+          <div id="workout-alert" class="alert-message"></div>
+          <form id="trainer-workout-form" class="form-grid">
+            <div class="form-group">
+              <label for="workout-member-select">Select Trainee / Member</label>
+              <select id="workout-member-select" required>
+                <option value="">-- Loading Members --</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="routine-title">Routine Name</label>
+              <input
+                type="text"
+                id="routine-title"
+                required
+                placeholder="e.g. Upper Body Hypertrophy"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="exercise-name">Primary Exercise</label>
+              <input
+                type="text"
+                id="exercise-name"
+                required
+                placeholder="e.g. Standard Push-Ups"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="exercise-sets-reps">Sets & Reps</label>
+              <input
+                type="text"
+                id="exercise-sets-reps"
+                required
+                placeholder="e.g. 3 Sets x 12 Reps"
+              />
+            </div>
+
+            <div class="form-group full-row">
+              <button
+                type="submit"
+                id="workout-submit-btn"
+                class="btn-lime-full"
+              >
+                Assign Workout Routine
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Assigned Members & Training Status Table -->
+      <section class="dashboard-card full-width">
+        <div class="card-header flex-between">
+          <h3>My Assigned Trainees</h3>
+          <button onclick="loadTraineesList()" class="btn-refresh">
+            🔄 Refresh List
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Member ID</th>
+                <th>Full Name</th>
+                <th>Email Address</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="trainees-table-body">
+              <tr>
+                <td colspan="6" class="text-center text-muted">
+                  Loading assigned trainees...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const API_BASE_URL = "http://localhost/fitlife_api/backend";
+      let currentUser = null;
+
+      // Session Guard
+      document.addEventListener("DOMContentLoaded", () => {
+        const storedUserRaw = localStorage.getItem("fitlife_user");
+
+        if (!storedUserRaw) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        try {
+          currentUser = JSON.parse(storedUserRaw);
+        } catch (err) {
+          localStorage.clear();
+          window.location.href = "login.html";
+          return;
+        }
+
+        // Role Check (Admin or Trainer allowed)
+        const role = (currentUser.role || "").toLowerCase();
+        if (role !== "trainer" && role !== "admin") {
+          window.location.href = "member-dashboard.html";
+          return;
+        }
+
+        document.getElementById("trainer-greeting").innerText =
+          `Coach ${currentUser.name || currentUser.full_name || "Trainer"}`;
+
+        loadTraineesList();
+        loadRoutinesCount();
+
+        document
+          .getElementById("trainer-workout-form")
+          .addEventListener("submit", handleAssignWorkout);
+      });
+
+      // Load Routines Count
+      async function loadRoutinesCount() {
+        const routinesCountStat = document.getElementById(
+          "stat-routines-count",
+        );
+        try {
+          const res = await fetch(`${API_BASE_URL}/routines.php`);
+          const data = await res.json();
+          if (res.ok && data.status === "success") {
+            routinesCountStat.innerText = data.data.length;
+          }
+        } catch (e) {
+          routinesCountStat.innerText = "0";
+        }
+      }
+
+      // Load Members into Dropdown & Table
+      async function loadTraineesList() {
+        const tbody = document.getElementById("trainees-table-body");
+        const selectDropdown = document.getElementById("workout-member-select");
+        const traineeCountStat = document.getElementById("stat-trainee-count");
+
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Fetching assigned members...</td></tr>`;
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/members.php`);
+          const result = await response.json();
+
+          if (
+            response.ok &&
+            result.status === "success" &&
+            result.data &&
+            result.data.length > 0
+          ) {
+            traineeCountStat.innerText = result.data.length;
+
+            // Render Table
+            tbody.innerHTML = result.data
+              .map(
+                (m) => `
+                        <tr>
+                            <td>#MEM-${m.id}</td>
+                            <td><strong>${m.name}</strong></td>
+                            <td>${m.email}</td>
+                            <td>${m.phone || "N/A"}</td>
+                            <td><span class="status-pill active">${m.status || "Active"}</span></td>
+                            <td>
+                                <button class="btn-action-checkin" onclick="trainerCheckinMember(${m.id})">⚡ Check-In</button>
+                            </td>
+                        </tr>
+                    `,
+              )
+              .join("");
+
+            // Populate Select Options
+            selectDropdown.innerHTML =
+              `<option value="">-- Choose Trainee --</option>` +
+              result.data
+                .map(
+                  (m) =>
+                    `<option value="${m.id}">${m.name} (#MEM-${m.id})</option>`,
+                )
+                .join("");
+          } else {
+            traineeCountStat.innerText = "0";
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No trainees found in the system.</td></tr>`;
+            selectDropdown.innerHTML = `<option value="">No members available</option>`;
+          }
+        } catch (error) {
+          traineeCountStat.innerText = "0";
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Failed to connect to backend API. Check XAMPP.</td></tr>`;
+          selectDropdown.innerHTML = `<option value="">Failed to load members</option>`;
+        }
+      }
+
+      // Assign Workout Form Action
+      async function handleAssignWorkout(e) {
+        e.preventDefault();
+        const alertBox = document.getElementById("workout-alert");
+        const submitBtn = document.getElementById("workout-submit-btn");
+
+        const memberId = document.getElementById("workout-member-select").value;
+        const title = document.getElementById("routine-title").value.trim();
+        const exercise = document.getElementById("exercise-name").value.trim();
+        const setsReps = document
+          .getElementById("exercise-sets-reps")
+          .value.trim();
+
+        if (!memberId) {
+          showAlert("Please select a trainee from the list.", "error");
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Publishing Routine...";
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/routines.php`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              member_id: memberId,
+              routine_name: title,
+              exercise: exercise,
+              sets_reps: setsReps,
+              assigned_by: currentUser.name || "Coach",
+            }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.status === "success") {
+            showAlert(
+              `Routine "${title}" assigned successfully! Trainee can view it on their portal/app.`,
+              "success",
+            );
+            document.getElementById("trainer-workout-form").reset();
+            loadRoutinesCount();
+          } else {
+            showAlert(
+              result.message || "Could not save workout routine.",
+              "error",
+            );
+          }
+        } catch (err) {
+          showAlert("Server error while saving workout routine.", "error");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Assign Workout Routine";
+        }
+      }
+
+      // Check-in Trainee
+      async function trainerCheckinMember(memberId) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/attendance.php`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ member_id: memberId }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.status === "success") {
+            alert("Trainee attendance logged successfully!");
+          } else {
+            alert("Check-in error: " + (result.message || "Failed to record."));
+          }
+        } catch (error) {
+          alert("Server connection error during check-in.");
+        }
+      }
+
+      function showAlert(msg, type) {
+        const alertBox = document.getElementById("workout-alert");
+        alertBox.innerText = msg;
+        alertBox.className = `alert-message ${type}`;
+        alertBox.style.display = "block";
+      }
+
+      function handleLogout() {
+        localStorage.clear();
+        window.location.href = "login.html";
+      }
+    </script>
+  </body>
+</html>

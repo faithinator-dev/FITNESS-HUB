@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FITNESS HUB - Create Account</title>
+    <link rel="shortcut icon" href="assets/images/image.png" type="image/x-icon">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="auth.css" />
+  </head>
+  <body>
+    <!-- Header Navigation -->
+    <header>
+      <div class="nav-container">
+        <a href="index.html" class="logo">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#CCFF00"
+            stroke-width="2.5"
+          >
+            <path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12" />
+          </svg>
+          <span>FITNESS HUB</span>
+        </a>
+        <div class="nav-right">
+          <span class="text-muted">Already registered?</span>
+          <a href="login.html" class="btn-lime-sm">Sign In</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Auth Container -->
+    <main class="auth-wrapper">
+      <div class="auth-card">
+        <!-- Left Side Branding / Image -->
+        <div class="auth-visual">
+          <div class="visual-overlay"></div>
+          <img
+            src="assets/images/auth-bg.jpg"
+            alt="Gym Community"
+            class="visual-img"
+            onerror="
+              this.src =
+                'https://via.placeholder.com/600x800/12141A/CCFF00?text=JOIN+THE+HUB'
+            "
+          />
+          <div class="visual-text">
+            <h2>Start Your <span class="highlight">Transformation</span></h2>
+            <p>
+              Join thousands of members and certified trainers shaping strength, endurance, and elite performance.
+            </p>
+          </div>
+        </div>
+
+        <!-- Right Side Registration Form -->
+        <div class="auth-form-container">
+          <div class="form-header">
+            <h2 id="form-heading">Create Account</h2>
+            <p id="form-subheading">Choose whether you are joining as a member or coach</p>
+          </div>
+          <p id="selected-plan-notice" class="selected-plan-notice" hidden></p>
+
+          <!-- Role Switcher -->
+          <div class="role-selection-group">
+            <div class="role-tabs">
+              <button type="button" class="role-tab-btn active" id="tab-member" onclick="selectRole('member')">
+                👤 Member
+              </button>
+              <button type="button" class="role-tab-btn" id="tab-trainer" onclick="selectRole('trainer')">
+                🏋️ Trainer / Coach
+              </button>
+            </div>
+          </div>
+
+          <div id="alert-box" class="alert-box"></div>
+
+          <form id="signup-form">
+            <input type="hidden" id="selected-role" value="member" />
+
+            <div class="form-group">
+              <label for="fullname" id="label-fullname">Full Name</label>
+              <input
+                type="text"
+                id="fullname"
+                required
+                placeholder="John Doe"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input
+                type="email"
+                id="email"
+                required
+                placeholder="name@example.com"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Phone Number</label>
+              <input type="tel" id="phone" required placeholder="+1 555 0199" />
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                required
+                placeholder="Create a strong password"
+              />
+            </div>
+
+            <button type="submit" id="submit-btn" class="btn-lime-full">
+              Create Account & Join
+            </button>
+          </form>
+
+          <p class="auth-footer text-muted">
+            By registering, you agree to our <a href="#">Terms</a> &
+            <a href="#">Privacy Policy</a>.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const API_BASE_URL = "http://localhost/fitlife_api/backend";
+      const signupPlanId = new URLSearchParams(window.location.search).get("plan");
+      const signupPlanNames = { basic: "Basic", standard: "Standard", premium: "Premium" };
+      const signupPlan = signupPlanNames[signupPlanId] ? signupPlanId : null;
+      const signupPlanNotice = document.getElementById("selected-plan-notice");
+      if (signupPlan) {
+        signupPlanNotice.textContent = `You chose the ${signupPlanNames[signupPlan]} plan. Create your member account, then sign in to continue the demo.`;
+        signupPlanNotice.hidden = false;
+        const signinLink = document.querySelector('.nav-right a[href="login.html"]');
+        if (signinLink) signinLink.href = `login.html?plan=${signupPlan}`;
+      }
+
+      function selectRole(role) {
+        const roleInput = document.getElementById("selected-role");
+        const tabMember = document.getElementById("tab-member");
+        const tabTrainer = document.getElementById("tab-trainer");
+        const heading = document.getElementById("form-heading");
+        const subheading = document.getElementById("form-subheading");
+        const submitBtn = document.getElementById("submit-btn");
+        const labelFullname = document.getElementById("label-fullname");
+
+        roleInput.value = role;
+
+        if (role === "trainer") {
+          tabTrainer.classList.add("active");
+          tabMember.classList.remove("active");
+          heading.innerHTML = `Trainer <span class="highlight">Registration</span>`;
+          subheading.innerText = "Register your coach account to build and assign routines";
+          labelFullname.innerText = "Coach Full Name";
+          submitBtn.innerText = "Register as Coach / Trainer";
+        } else {
+          tabMember.classList.add("active");
+          tabTrainer.classList.remove("active");
+          heading.innerHTML = "Create Account";
+          subheading.innerText = "Fill in your details to start your membership";
+          labelFullname.innerText = "Full Name";
+          submitBtn.innerText = "Create Account & Join";
+        }
+      }
+
+      document
+        .getElementById("signup-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const alertBox = document.getElementById("alert-box");
+          const submitBtn = document.getElementById("submit-btn");
+
+          alertBox.style.display = "none";
+          submitBtn.disabled = true;
+          const origText = submitBtn.innerText;
+          submitBtn.innerText = "Creating Account...";
+
+          const payload = {
+            name: document.getElementById("fullname").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            phone: document.getElementById("phone").value.trim(),
+            password: document.getElementById("password").value.trim(),
+            role: document.getElementById("selected-role").value,
+          };
+
+          try {
+            const response = await fetch(
+              `${API_BASE_URL}/register_member.php`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              },
+            );
+
+            const result = await response.json();
+
+            if (response.ok && result.status === "success") {
+              const registeredRole = payload.role === "trainer" ? "Coach" : "Member";
+              alert(`${registeredRole} account created successfully! Please sign in.`);
+              window.location.href = signupPlan ? `login.html?plan=${signupPlan}` : "login.html";
+            } else {
+              showAlert(result.message || "Registration failed.");
+            }
+          } catch (error) {
+            showAlert(
+              "Server communication error. Check XAMPP MySQL connection.",
+            );
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = origText;
+          }
+        });
+
+      function showAlert(msg) {
+        const alertBox = document.getElementById("alert-box");
+        alertBox.innerText = msg;
+        alertBox.style.display = "block";
+      }
+    </script>
+  </body>
+</html>

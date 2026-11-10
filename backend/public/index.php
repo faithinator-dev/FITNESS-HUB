@@ -1,0 +1,61 @@
+<?php
+// 1. Enable CORS headers for Web & Mobile clients
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Content-Type: application/json; charset=UTF-8");
+
+// 2. Handle HTTP OPTIONS preflight request from Web Browsers
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+require_once '../config/database.php';
+
+// 3. Parse requested URI path
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$uriSegments = explode('/', trim($requestUri, '/'));
+
+// Find route segment (e.g., /public/index.php/login)
+$endpoint = end($uriSegments);
+
+$database = new Database();
+$db = $database->getConnection();
+
+// 4. Basic Router Mapping
+switch ($endpoint) {
+    case 'login':
+        require_once '../login.php';
+        break;
+
+    case 'members':
+        require_once '../members.php';
+        break;
+
+    case 'register':
+    case 'register_member':
+        require_once '../register_member.php';
+        break;
+
+    case 'attendance':
+        require_once '../attendance.php';
+        break;
+
+    case 'routines':
+        require_once '../routines.php';
+        break;
+
+    case 'stats':
+    case 'stat':
+        require_once '../stat.php';
+        break;
+
+    default:
+        echo json_encode([
+            "status" => "success",
+            "message" => "FitLife Central API Router is running.",
+            "available_endpoints" => ["login", "members", "register", "attendance", "routines", "stats"]
+        ]);
+        break;
+}

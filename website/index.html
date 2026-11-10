@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FITNESS HUB - Transform Your Body, Elevate Your Mind</title>
+    <link rel="shortcut icon" href="assets/images/image.png" type="image/x-icon">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Header Navigation -->
+    <header>
+      <div class="nav-container">
+        <a href="#" class="logo">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#CCFF00"
+            stroke-width="2.5"
+          >
+            <path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12" />
+          </svg>
+          <span>FITNESS HUB</span>
+        </a>
+        <nav class="nav-menu">
+          <a href="index.html#home" class="active">Home</a>
+          <a href="about.html">About</a>
+          <a href="programs.html">Programs</a>
+          <a href="contact.html">Contact</a>
+        </nav>
+        <div id="nav-auth-slot">
+          <a href="login.html" class="btn-lime btn-sm">Join now</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-section">
+      <!-- IMAGE PLACEHOLDER 1: Hero Background -->
+      <div class="hero-bg-overlay"></div>
+      <div class="hero-bg-container">
+        <video
+          alt="Hero Gym Training"
+          class="hero-bg-vid"
+          
+          onerror="this.style.display = 'none'"
+          autoplay
+          muted
+          loop
+
+      >
+        <source src="assets/images/hero-bg.mp4" type="video/mp4" />
+      </video>
+
+      <div class="hero-content">
+        <h1>
+          Transform Your <span class="highlight">Body</span>,<br />Elevate Your
+          <span class="highlight">Mind</span>
+        </h1>
+        <p class="hero-subtitle">
+          Your health is your wealth. Take control of your fitness journey with
+          us—because every rep counts
+        </p>
+
+        <div class="hero-buttons">
+          <a href="login.html" class="btn-lime">Book Free Trial</a>
+          <a href="#video-section" class="btn-outline-play">
+            Watch video
+            <span class="play-icon">▶</span>
+          </a>
+        </div>
+
+        <!-- Social Ratings Pill -->
+        <div class="ratings-pill">
+          <div class="avatar-stack">
+            <span class="avatar">★</span>
+            <span class="avatar">★</span>
+            <span class="avatar">★</span>
+            <span class="avatar">★</span>
+            <span class="avatar">★</span>
+          </div>
+          <div class="rating-text">
+            <span class="stars">★ 5.0</span> Ratings
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Banner -->
+    <section class="stats-section">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <h2>10k+</h2>
+          <p>Gyms Worldwide</p>
+        </div>
+        <div class="stat-item">
+          <h2>150+</h2>
+          <p>Active members</p>
+        </div>
+        <div class="stat-item">
+          <h2>50+</h2>
+          <p>Certified trainers</p>
+        </div>
+        <div class="stat-item">
+          <h2>5+</h2>
+          <p>Years of excellence</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Meet Our Expert Trainers -->
+    <section id="about" class="trainers-section">
+      <div class="section-title text-center">
+        <h2>Meet Our Expert Trainers</h2>
+        <p>
+          Our certified trainers are here to guide, motivate, and push you
+          toward your fitness goals with personalized attention and proven
+          techniques.
+        </p>
+      </div>
+
+      <div class="trainers-cards-container">
+        <!-- IMAGE PLACEHOLDER 2: Left Trainer -->
+        <div class="trainer-card side-card">
+          <img
+            src="assets/images/trainer-1.jpg"
+            alt="Fitness trainer"
+            class="trainer-img"
+            onerror="
+              this.src =
+                'https://via.placeholder.com/300x420/1A1C23/FFFFFF?text=Trainer+Photo+1'
+            "
+          />
+          <div class="trainer-info">
+            <h3>Personal training</h3>
+            <p>Support and guidance to help you move with confidence.</p>
+          </div>
+        </div>
+
+        <!-- IMAGE PLACEHOLDER 3: Middle Trainer (Featured) -->
+        <div class="trainer-card featured-card">
+          <img
+            src="assets/images/trainer-2.jpg"
+            alt="Michael Adams"
+            class="trainer-img"
+            onerror="
+              this.src =
+                'https://via.placeholder.com/350x480/1A1C23/CCFF00?text=Michael+Adams'
+            "
+          />
+          <div class="trainer-info">
+            <h3>Michael Adams</h3>
+            <p>
+              Strength coach helping members build muscle and endurance with
+              proven training methods.
+            </p>
+          </div>
+        </div>
+
+        <!-- IMAGE PLACEHOLDER 4: Right Trainer -->
+        <div class="trainer-card side-card">
+          <img
+            src="assets/images/trainer-3.jpg"
+            alt="Fitness trainer"
+            class="trainer-img"
+            onerror="
+              this.src =
+                'https://via.placeholder.com/300x420/1A1C23/FFFFFF?text=Trainer+Photo+3'
+            "
+          />
+          <div class="trainer-info">
+            <h3>Strength coaching</h3>
+            <p>Build a steady routine with coaching that meets you where you are.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slider Arrows -->
+      <div class="slider-controls">
+        <button class="slider-btn">←</button>
+        <button class="slider-btn active">→</button>
+      </div>
+      <p class="sr-only" id="trainer-announcement" aria-live="polite"></p>
+    </section>
+
+    <!-- Take a Look Inside (Video Section) -->
+    <section id="video-section" class="video-section">
+      <div class="section-title text-center">
+        <h2>Take a Look Inside</h2>
+        <p>
+          Watch our gym in motion — from training sessions to member success
+          stories, here's a glimpse of the energy that drives us.
+        </p>
+      </div>
+
+      <div class="video-container">
+        <!-- IMAGE PLACEHOLDER 5: Video Player Thumbnail -->
+        <img
+          src="assets/images/video-thumb.jpg"
+          alt="Gym Video Preview"
+          class="video-thumb"
+          onerror="
+            this.src =
+              'https://via.placeholder.com/900x500/1A1C23/CCFF00?text=Gym+Video+Preview+Thumbnail'
+          "
+        />
+        <div class="play-button-overlay">
+          <div class="youtube-red-btn">▶</div>
+        </div>
+      </div>
+
+      <p class="video-caption text-center">
+        Get a real feel of our gym environment, workouts, and community vibe.
+        See how we train, motivate, and transform lives every single day.
+      </p>
+
+      <div class="text-center" style="margin-top: 1.5rem">
+        <a href="login.html" class="btn-lime">Book Free Trial</a>
+      </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="programs" class="pricing-section">
+      <div class="section-title text-center">
+        <h2>Choose Your Plan</h2>
+        <p>
+          Flexible memberships designed to fit your lifestyle. No hidden fees,
+          just results.
+        </p>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- Basic Plan -->
+        <div class="pricing-card">
+          <h3>Basic</h3>
+          <p class="sub text-muted">For Beginners</p>
+          <div class="price">$299</div>
+          <ul class="features-list">
+            <li>✓ Full Gym Equipment Access</li>
+            <li>✓ Free Locker And Showers</li>
+            <li>✓ Flexible Workout Hours</li>
+            <li>✓ Cardio And Strength Zones</li>
+            <li>✓ Monthly Progress Tracking</li>
+          </ul>
+          <a href="login.html?plan=basic" class="btn-outline-card">Get Started</a>
+        </div>
+
+        <!-- Premium Plan (Highlighted) -->
+        <div class="pricing-card featured-plan">
+          <h3>Premium</h3>
+          <p class="sub text-muted">For Gym Enthusiast</p>
+          <div class="price">$500</div>
+          <ul class="features-list">
+            <li>✓ Unlimited Gym Access Anytime</li>
+            <li>✓ All Group Fitness Classes</li>
+            <li>✓ Dedicated Personal Trainer Support</li>
+            <li>✓ Customized Nutrition Guidance</li>
+            <li>✓ Advanced Progress Tracking Tools</li>
+          </ul>
+          <a href="login.html?plan=premium" class="btn-lime-full">Get Started</a>
+        </div>
+
+        <!-- Standard Plan -->
+        <div class="pricing-card">
+          <h3>Standard</h3>
+          <p class="sub text-muted">For Regular Gym-Goer</p>
+          <div class="price">$399</div>
+          <ul class="features-list">
+            <li>✓ Full Gym Access Daily</li>
+            <li>✓ Group Fitness Class Entry</li>
+            <li>✓ One Personal Training Session</li>
+            <li>✓ Free Locker And Showers</li>
+            <li>✓ Progress Tracking Included</li>
+          </ul>
+          <a href="login.html?plan=standard" class="btn-outline-card">Get Started</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer>
+      <div class="footer-container">
+        <div class="footer-brand">
+          <a href="#" class="logo">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#CCFF00"
+              stroke-width="2.5"
+            >
+              <path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12" />
+            </svg>
+            <span>FITNESS HUB</span>
+          </a>
+          <p>
+            Our gym is built on the belief that fitness is more than just
+            workouts — it's a lifestyle! With certified trainers, modern
+            equipment, and a motivating community, we help you push beyond
+            limits.
+          </p>
+        </div>
+
+        <div class="footer-links">
+          <h4>Company</h4>
+          <a href="index.html#home">Home</a>
+          <a href="about.html">About Us</a>
+          <a href="programs.html">Programs</a>
+          <a href="trainers.html">Trainers</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="contact.html">Contact</a>
+        </div>
+
+        <div class="footer-links">
+          <h4>Support</h4>
+          <a href="faqs.html">FAQs</a>
+          <a href="membership-plans.html">Membership Plans</a>
+          <a href="terms.html">Terms & Conditions</a>
+          <a href="privacy.html">Privacy Policy</a>
+        </div>
+
+        <div class="footer-links">
+          <h4>FAQs</h4>
+          <a href="about.html">About us</a>
+          <a href="contact.html">Contact us</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="legal-links">
+          <a href="cookies.html">Cookies policy</a>
+          <a href="legal.html">Legal terms</a>
+          <a href="privacy.html">Privacy policy</a>
+        </div>
+        <div class="social-icons">
+          <a href="#">📷</a>
+          <a href="#">𝕏</a>
+          <a href="#">📘</a>
+        </div>
+      </div>
+    </footer>
+    <script>
+      // Cycle the trainer cards and keep the centered card visually featured.
+      (function () {
+        const track = document.querySelector(".trainers-cards-container");
+        const controls = document.querySelectorAll(".slider-controls .slider-btn");
+        const announcement = document.getElementById("trainer-announcement");
+        if (!track || controls.length < 2) return;
+        controls[0].type = "button";
+        controls[0].setAttribute("aria-label", "Previous trainer");
+        controls[1].type = "button";
+        controls[1].setAttribute("aria-label", "Next trainer");
+
+        const cards = () => Array.from(track.children);
+        function showFeatured() {
+          cards().forEach((card, index) => {
+            card.classList.toggle("featured-card", index === 1);
+            card.classList.toggle("side-card", index !== 1);
+          });
+          const name = cards()[1]?.querySelector(".trainer-info h3")?.textContent;
+          if (announcement && name) announcement.textContent = `${name} featured`;
+        }
+        controls[0].addEventListener("click", () => {
+          track.insertBefore(track.lastElementChild, track.firstElementChild);
+          showFeatured();
+        });
+        controls[1].addEventListener("click", () => {
+          track.appendChild(track.firstElementChild);
+          showFeatured();
+        });
+        showFeatured();
+      })();
+
+      // Dynamic auth check on landing page
+      (function () {
+        const raw = localStorage.getItem("fitlife_user");
+        if (raw) {
+          try {
+            const user = JSON.parse(raw);
+            const slot = document.getElementById("nav-auth-slot");
+            if (slot && user) {
+              const role = (user.role || "").toLowerCase();
+              let target = "member-dashboard.html";
+              if (role === "admin") target = "admin-dashboard.html";
+              else if (role === "trainer") target = "trainer-dashboard.html";
+              slot.innerHTML = `<a href="${target}" class="btn-lime btn-sm">My Dashboard (${user.name ? user.name.split(" ")[0] : "Account"})</a>`;
+            }
+          } catch (e) {}
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FITNESS HUB - Member Portal</title>
+    <link rel="shortcut icon" href="assets/images/image.png" type="image/x-icon">
+    <link
+
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="member-dashboard.css" />
+  </head>
+  <body>
+    <!-- Top Navigation Header -->
+    <header>
+      <div class="nav-container">
+        <a href="index.html" class="logo">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#CCFF00"
+            stroke-width="2.5"
+          >
+            <path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12" />
+          </svg>
+          <span>FITNESS HUB</span>
+        </a>
+        <div class="user-profile-menu">
+          <span id="user-greeting" class="user-name">Welcome, Member</span>
+          <button onclick="handleLogout()" class="btn-logout">Sign Out</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard-wrapper">
+      <!-- Hero Welcome Banner -->
+      <section class="welcome-banner">
+        <div class="welcome-text">
+          <h1>Member <span class="highlight">Portal</span></h1>
+          <p>
+            Track your workout routines, record daily gym visits, and monitor
+            your progress.
+          </p>
+        </div>
+        <div class="membership-badge">
+          <span class="badge-dot"></span>
+          <span id="membership-status">MEMBERSHIP OVERVIEW</span>
+        </div>
+      </section>
+
+      <!-- Stats Overview Row -->
+      <section class="stats-row">
+        <div class="stat-card">
+          <p class="stat-label">Membership Plan</p>
+          <h3 id="member-plan-name" class="stat-value highlight">No plan selected</h3>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Total Visits Logged</p>
+          <h3 id="visit-count" class="stat-value">--</h3>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Active Routines</p>
+          <h3 id="routine-count" class="stat-value">--</h3>
+        </div>
+      </section>
+
+      <!-- Content Grid -->
+      <div class="content-grid">
+        <!-- Quick Check-In Panel -->
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h3>Quick Gym Check-In</h3>
+          </div>
+          <div class="card-body">
+            <p class="text-muted">
+              Currently at the gym? Tap the button below to log your check-in
+              timestamp instantly into the system.
+            </p>
+            <button
+              id="checkin-btn"
+              class="btn-lime-full"
+              onclick="logMemberAttendance()"
+            >
+              ⚡ Log Gym Visit Now
+            </button>
+            <div id="checkin-msg" class="checkin-alert"></div>
+          </div>
+        </div>
+
+        <!-- Assigned Workout Routines -->
+        <div class="dashboard-card">
+          <div class="card-header flex-between">
+            <h3>Today's Workout Routine</h3>
+            <button onclick="loadMemberRoutines()" class="btn-refresh" style="background:none; border:none; color:var(--primary-lime); cursor:pointer; font-size:0.8rem; font-weight:700;">🔄 Refresh</button>
+          </div>
+          <div class="card-body" id="routines-container">
+            <div class="workout-item">
+              <div class="workout-info">
+                <h4>Standard Push-Ups</h4>
+                <p class="text-muted">Assigned Routine</p>
+              </div>
+              <span class="workout-sets">3 Sets × 12 Reps</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attendance History Log Table -->
+      <section class="dashboard-card full-width">
+        <div class="card-header">
+          <h3>My Attendance History</h3>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Entry ID</th>
+                <th>Verification Status</th>
+                <th>Check-in Date & Time</th>
+              </tr>
+            </thead>
+            <tbody id="attendance-history-body">
+              <tr>
+                <td
+                  colspan="3"
+                  style="text-align: center; color: var(--text-muted)"
+                >
+                  Loading attendance history...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const API_BASE_URL = "http://localhost/fitlife_api/backend";
+      let currentUser = null;
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const storedUserRaw = localStorage.getItem("fitlife_user");
+
+        // 1. Check if user data exists
+        if (!storedUserRaw) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        try {
+          currentUser = JSON.parse(storedUserRaw);
+        } catch (err) {
+          localStorage.removeItem("fitlife_user");
+          window.location.href = "login.html";
+          return;
+        }
+
+        // 2. Display greeting safely
+        document.getElementById("user-greeting").innerText =
+          `Welcome, ${currentUser.name || currentUser.full_name || "Member"}`;
+
+        // Carry the selected landing-page plan through sign-in into this demo dashboard.
+        try {
+          const demoPlan = JSON.parse(localStorage.getItem("fitlife_demo_plan") || "null");
+          if (demoPlan && ["basic", "standard", "premium"].includes(demoPlan.id)) {
+            document.getElementById("member-plan-name").innerText = demoPlan.name;
+            document.getElementById("membership-status").innerText = "DEMO PLAN SELECTED";
+          }
+        } catch (err) {
+          localStorage.removeItem("fitlife_demo_plan");
+        }
+
+        // 3. Load attendance data & routines
+        loadAttendanceHistory();
+        loadMemberRoutines();
+      });
+
+      async function loadMemberRoutines() {
+        const container = document.getElementById("routines-container");
+        const routineCount = document.getElementById("routine-count");
+        const memberId = currentUser.member_id || currentUser.id;
+
+        try {
+          const res = await fetch(`${API_BASE_URL}/routines.php?member_id=${memberId}`);
+          const result = await res.json();
+
+          if (res.ok && result.status === "success" && result.data && result.data.length > 0) {
+            routineCount.innerText = `${result.data.length} Plans`;
+            container.innerHTML = result.data.map(r => `
+              <div class="workout-item">
+                <div class="workout-info">
+                  <h4>${r.exercise || "Workout"}</h4>
+                  <p class="text-muted">${r.routine_name || "Assigned Routine"} • By ${r.assigned_by || "Coach"}</p>
+                </div>
+                <span class="workout-sets">${r.sets_reps || "3 Sets x 10 Reps"}</span>
+              </div>
+            `).join("");
+          } else {
+            routineCount.innerText = "Default Routine";
+            container.innerHTML = `
+              <div class="workout-item">
+                <div class="workout-info">
+                  <h4>Standard Push-Ups</h4>
+                  <p class="text-muted">Target: Chest, Triceps, Shoulders</p>
+                </div>
+                <span class="workout-sets">3 Sets × 12 Reps</span>
+              </div>
+              <div class="workout-item">
+                <div class="workout-info">
+                  <h4>Bodyweight Squats</h4>
+                  <p class="text-muted">Target: Quadriceps, Glutes</p>
+                </div>
+                <span class="workout-sets">4 Sets × 15 Reps</span>
+              </div>
+            `;
+          }
+        } catch (e) {
+          routineCount.innerText = "Standard Plan";
+        }
+      }
+
+      async function logMemberAttendance() {
+        const memberId = currentUser.member_id || currentUser.id;
+        if (!memberId) {
+          alert("Member ID missing. Please log out and sign in again.");
+          return;
+        }
+
+        const checkinBtn = document.getElementById("checkin-btn");
+        const checkinMsg = document.getElementById("checkin-msg");
+
+        checkinBtn.disabled = true;
+        checkinBtn.innerText = "Recording Visit...";
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/attendance.php`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ member_id: memberId }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.status === "success") {
+            checkinMsg.className = "checkin-alert success";
+            checkinMsg.innerText = "Visit recorded successfully!";
+            checkinBtn.innerText = "Logged Today ✓";
+            loadAttendanceHistory();
+          } else {
+            checkinMsg.className = "checkin-alert error";
+            checkinMsg.innerText = result.message || "Failed to check in.";
+            checkinBtn.disabled = false;
+            checkinBtn.innerText = "⚡ Log Gym Visit Now";
+          }
+        } catch (error) {
+          checkinMsg.className = "checkin-alert error";
+          checkinMsg.innerText = "Server connection error.";
+          checkinBtn.disabled = false;
+          checkinBtn.innerText = "⚡ Log Gym Visit Now";
+        }
+      }
+
+      async function loadAttendanceHistory() {
+        const historyBody = document.getElementById("attendance-history-body");
+        const visitCount = document.getElementById("visit-count");
+        const memberId = currentUser.member_id || currentUser.id;
+
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/attendance.php?member_id=${memberId}`,
+          );
+          const result = await response.json();
+
+          if (
+            response.ok &&
+            result.status === "success" &&
+            result.data &&
+            result.data.length > 0
+          ) {
+            visitCount.innerText = result.data.length;
+            historyBody.innerHTML = result.data
+              .map(
+                (item, idx) => `
+                    <tr>
+                        <td>#LOG-${item.id || 1000 + idx}</td>
+                        <td><span class="status-pill verified">Verified Entry</span></td>
+                        <td>${item.check_in_at || "Recorded"}</td>
+                    </tr>
+                `,
+              )
+              .join("");
+          } else {
+            visitCount.innerText = "0";
+            historyBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align:center; color: var(--text-muted);">No attendance logged yet. Click above to log your first visit!</td>
+                    </tr>
+                `;
+          }
+        } catch (error) {
+          visitCount.innerText = "1";
+          historyBody.innerHTML = `
+                <tr>
+                    <td>#LOG-1001</td>
+                    <td><span class="status-pill verified">Verified Entry</span></td>
+                    <td>Today, Initial Check-In</td>
+                </tr>
+            `;
+        }
+      }
+
+      function handleLogout() {
+        localStorage.clear();
+        window.location.href = "login.html";
+      }
+    </script>
+  </body>
+</html>
