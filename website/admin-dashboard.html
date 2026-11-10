@@ -40,41 +40,53 @@
     </header>
 
     <main class="dashboard-wrapper">
+      <div class="dashboard-layout">
+      <aside class="dashboard-sidebar" aria-label="Admin navigation">
+        <p class="sidebar-label">WORKSPACE</p>
+        <a class="sidebar-link active" href="#overview"><span>01</span> Overview</a>
+        <a class="sidebar-link" href="#register-member"><span>02</span> Add an account</a>
+        <a class="sidebar-link" href="#member-directory"><span>03</span> Member directory</a>
+        <div class="sidebar-note"><strong>Gym operations</strong><p>Keep member records and daily attendance moving.</p></div>
+      </aside>
+      <div class="dashboard-main">
       <!-- Hero Title Banner -->
-      <section class="welcome-banner">
+      <section class="welcome-banner" id="overview">
         <div class="welcome-text">
-          <h1>Executive <span class="highlight">Control Panel</span></h1>
+          <p class="welcome-kicker">ADMIN WORKSPACE / OVERVIEW</p>
+          <h1>Good to see you, <span id="admin-first-name">Admin</span></h1>
           <p>
-            Manage registered gym members, process registrations, and monitor
-            real-time check-in stats.
+            A clear view of your members, today’s activity, and account tools.
           </p>
         </div>
         <div class="status-indicator">
-          <span class="pulse-dot"></span>
-          SYSTEM ONLINE (PHP REST API)
+          <span class="pulse-dot"></span> GYM OPERATIONS
         </div>
       </section>
 
       <!-- Dynamic System Stats Row -->
       <section class="stats-row">
         <div class="stat-card">
-          <p class="stat-label">Active Members</p>
+          <p class="stat-label">Active members</p>
           <h3 id="stat-active-members" class="stat-value highlight">--</h3>
+          <p class="stat-caption">Member accounts in good standing</p>
         </div>
         <div class="stat-card">
-          <p class="stat-label">Today's Check-Ins</p>
+          <p class="stat-label">Today’s check-ins</p>
           <h3 id="stat-today-checkins" class="stat-value">--</h3>
+          <p class="stat-caption">Visits recorded today</p>
         </div>
         <div class="stat-card">
-          <p class="stat-label">Active Plans</p>
-          <h3 class="stat-value">3 Tiered Plans</h3>
+          <p class="stat-label">Membership options</p>
+          <h3 class="stat-value">03</h3>
+          <p class="stat-caption">Basic, Standard, and Premium</p>
         </div>
       </section>
 
       <!-- New Member Registration Form -->
-      <section class="dashboard-card full-width" style="margin-bottom: 2rem">
+      <section class="dashboard-card full-width" id="register-member" style="margin-bottom: 2rem">
         <div class="card-header">
-          <h3>Register New Member</h3>
+          <h3>Add an account</h3>
+          <p class="section-subtitle">Create a member or trainer login for your team.</p>
         </div>
         <div class="card-body">
           <div id="reg-alert" class="alert-message"></div>
@@ -149,10 +161,11 @@
       </section>
 
       <!-- Active Members Directory Table -->
-      <section class="dashboard-card full-width">
+      <section class="dashboard-card full-width" id="member-directory">
         <div class="card-header flex-between">
-          <h3>Registered Members Directory</h3>
-          <button onclick="loadMembersDirectory()" class="btn-refresh">
+          <div><h3>Member directory</h3><p class="section-subtitle" id="directory-count">Loading members…</p></div>
+          <input type="search" id="member-search" class="member-search" placeholder="Search members" aria-label="Search members">
+          <button onclick="loadMembersDirectory()" class="btn-refresh" type="button">
             🔄 Refresh Directory
           </button>
         </div>
@@ -178,11 +191,14 @@
           </table>
         </div>
       </section>
+      </div>
+      </div>
     </main>
 
     <script>
       const API_BASE_URL = "http://localhost/fitlife_api/backend";
       let currentUser = null;
+      let memberDirectory = [];
 
       // Session Protection Guard
       document.addEventListener("DOMContentLoaded", () => {
@@ -193,16 +209,31 @@
           return;
         }
 
-        currentUser = JSON.parse(storedUser);
+        try {
+          currentUser = JSON.parse(storedUser);
+        } catch (error) {
+          localStorage.removeItem("fitlife_user");
+          window.location.href = "login.html";
+          return;
+        }
 
-        // Optional role verification
-        if (currentUser.role !== "admin" && currentUser.role !== "trainer") {
-          window.location.href = "member-dashboard.html";
+        if (!currentUser || typeof currentUser !== "object") {
+          localStorage.removeItem("fitlife_user");
+          window.location.href = "login.html";
+          return;
+        }
+        const role = (currentUser.role || "").toLowerCase();
+        if (role !== "admin") {
+          if (role === "trainer") window.location.href = "trainer-dashboard.html";
+          else window.location.href = "member-dashboard.html";
           return;
         }
 
         document.getElementById("admin-greeting").innerText =
-          `${currentUser.name || "Admin"} (${currentUser.role.toUpperCase()})`;
+          `${currentUser.name || "Admin"}`;
+        document.getElementById("admin-first-name").innerText =
+          (currentUser.name || "Admin").trim().split(/\s+/)[0];
+        document.getElementById("member-search").addEventListener("input", renderMembersDirectory);
 
         // Load initial dashboard data
         loadDashboardStats();
@@ -240,12 +271,36 @@
           const response = await fetch(`${API_BASE_URL}/members.php`);
           const result = await response.json();
 
-          if (
-            response.ok &&
-            result.status === "success" &&
-            result.data.length > 0
-          ) {
-            tbody.innerHTML = result.data
+          if (response.ok && result.status === "success" && Array.isArray(result.data)) {
+            memberDirectory = result.data;
+            renderMembersDirectory();
+          } else {
+            memberDirectory = [];
+            renderMembersDirectory();
+          }
+        } catch (error) {
+          document.getElementById("directory-count").innerText = "Directory unavailable";
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Failed to connect to PHP API server. Check XAMPP.</td></tr>`;
+        }
+      }
+
+      function renderMembersDirectory() {
+        const tbody = document.getElementById("members-table-body");
+        const query = document.getElementById("member-search").value.trim().toLowerCase();
+        const filtered = memberDirectory.filter((member) =>
+          [member.name, member.email, member.phone, member.status, member.id]
+            .some((value) => String(value || "").toLowerCase().includes(query)),
+        );
+        document.getElementById("directory-count").innerText = query
+          ? `${filtered.length} of ${memberDirectory.length} members`
+          : `${memberDirectory.length} members`;
+
+        if (!filtered.length) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">${query ? "No members match this search." : "No members recorded yet in the database."}</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = filtered
               .map(
                 (member) => `
                         <tr>
@@ -261,12 +316,6 @@
                     `,
               )
               .join("");
-          } else {
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No members recorded yet in the database.</td></tr>`;
-          }
-        } catch (error) {
-          tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Failed to connect to PHP API server. Check XAMPP.</td></tr>`;
-        }
       }
 
       // Register New Member

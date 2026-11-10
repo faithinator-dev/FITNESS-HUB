@@ -40,49 +40,61 @@
     </header>
 
     <main class="dashboard-wrapper">
+      <div class="dashboard-layout">
+      <aside class="dashboard-sidebar" aria-label="Trainer navigation">
+        <p class="sidebar-label">COACH DESK</p>
+        <a class="sidebar-link active" href="#coach-overview"><span>01</span> Overview</a>
+        <a class="sidebar-link" href="#routine-builder"><span>02</span> Build a routine</a>
+        <a class="sidebar-link" href="#member-roster"><span>03</span> Member roster</a>
+        <div class="sidebar-note"><strong>Coaching focus</strong><p>Build clear plans that help members keep making progress.</p></div>
+      </aside>
+      <div class="dashboard-main">
       <!-- Hero Title Banner -->
-      <section class="welcome-banner">
+      <section class="welcome-banner" id="coach-overview">
         <div class="welcome-text">
-          <h1>Trainer <span class="highlight">Command Center</span></h1>
+          <p class="welcome-kicker">TRAINER WORKSPACE / TODAY</p>
+          <h1>Your coaching desk</h1>
           <p>
-            Assign customized workout plans, review assigned members, and
-            monitor training check-ins.
+            Create focused workout routines and support members through their training.
           </p>
         </div>
         <div class="status-indicator">
           <span class="pulse-dot"></span>
-          ACTIVE COACH PORTAL
+          COACH DESK
         </div>
       </section>
 
       <!-- Stats Overview Row -->
       <section class="stats-row">
         <div class="stat-card">
-          <p class="stat-label">Assigned Trainees</p>
+          <p class="stat-label">Members available</p>
           <h3 id="stat-trainee-count" class="stat-value highlight">--</h3>
+          <p class="stat-caption">Members available for coaching</p>
         </div>
         <div class="stat-card">
-          <p class="stat-label">Routines Created</p>
+          <p class="stat-label">Routines in system</p>
           <h3 id="stat-routines-count" class="stat-value">--</h3>
+          <p class="stat-caption">Saved workout plans</p>
         </div>
         <div class="stat-card">
-          <p class="stat-label">Specialization</p>
+          <p class="stat-label">Coaching focus</p>
           <h3 id="stat-specialization" class="stat-value">
-            Strength & Conditioning
+            Member progress
           </h3>
         </div>
       </section>
 
       <!-- Assign Workout Plan Form Section -->
-      <section class="dashboard-card full-width" style="margin-bottom: 2rem">
+      <section class="dashboard-card full-width routine-builder" id="routine-builder" style="margin-bottom: 2rem">
         <div class="card-header">
-          <h3>Create & Assign Workout Routine</h3>
+          <h3>Build a workout routine</h3>
+          <p class="section-subtitle">Choose a member, set the focus, and publish a simple plan.</p>
         </div>
         <div class="card-body">
           <div id="workout-alert" class="alert-message"></div>
           <form id="trainer-workout-form" class="form-grid">
             <div class="form-group">
-              <label for="workout-member-select">Select Trainee / Member</label>
+              <label for="workout-member-select">Select a member</label>
               <select id="workout-member-select" required>
                 <option value="">-- Loading Members --</option>
               </select>
@@ -132,9 +144,9 @@
       </section>
 
       <!-- Assigned Members & Training Status Table -->
-      <section class="dashboard-card full-width">
+      <section class="dashboard-card full-width" id="member-roster">
         <div class="card-header flex-between">
-          <h3>My Assigned Trainees</h3>
+          <div><h3>Member roster</h3><p class="section-subtitle">Choose a member here or in the routine builder.</p></div>
           <button onclick="loadTraineesList()" class="btn-refresh">
             🔄 Refresh List
           </button>
@@ -154,13 +166,15 @@
             <tbody id="trainees-table-body">
               <tr>
                 <td colspan="6" class="text-center text-muted">
-                  Loading assigned trainees...
+                  Loading the member roster...
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
       </section>
+      </div>
+      </div>
     </main>
 
     <script>
@@ -184,10 +198,16 @@
           return;
         }
 
-        // Role Check (Admin or Trainer allowed)
+        if (!currentUser || typeof currentUser !== "object") {
+          localStorage.removeItem("fitlife_user");
+          window.location.href = "login.html";
+          return;
+        }
+
+        // Keep coaching tools scoped to trainer accounts.
         const role = (currentUser.role || "").toLowerCase();
-        if (role !== "trainer" && role !== "admin") {
-          window.location.href = "member-dashboard.html";
+        if (role !== "trainer") {
+          window.location.href = role === "admin" ? "admin-dashboard.html" : "member-dashboard.html";
           return;
         }
 
@@ -224,7 +244,7 @@
         const selectDropdown = document.getElementById("workout-member-select");
         const traineeCountStat = document.getElementById("stat-trainee-count");
 
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Fetching assigned members...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Loading member records...</td></tr>`;
 
         try {
           const response = await fetch(`${API_BASE_URL}/members.php`);
@@ -267,7 +287,7 @@
                 .join("");
           } else {
             traineeCountStat.innerText = "0";
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No trainees found in the system.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No members found in the system.</td></tr>`;
             selectDropdown.innerHTML = `<option value="">No members available</option>`;
           }
         } catch (error) {
