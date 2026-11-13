@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-require_once '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 // 3. Parse requested URI path
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -26,29 +26,29 @@ $db = $database->getConnection();
 // 4. Basic Router Mapping
 switch ($endpoint) {
     case 'login':
-        require_once '../login.php';
+        require_once __DIR__ . '/../login.php';
         break;
 
     case 'members':
-        require_once '../members.php';
+        require_once __DIR__ . '/../members.php';
         break;
 
     case 'register':
     case 'register_member':
-        require_once '../register_member.php';
+        require_once __DIR__ . '/../register_member.php';
         break;
 
     case 'attendance':
-        require_once '../attendance.php';
+        require_once __DIR__ . '/../attendance.php';
         break;
 
     case 'routines':
-        require_once '../routines.php';
+        require_once __DIR__ . '/../routines.php';
         break;
 
     case 'stats':
     case 'stat':
-        require_once '../stat.php';
+        require_once __DIR__ . '/../stat.php';
         break;
 
     default:
