@@ -1,22 +1,29 @@
 <?php
 require_once 'config/database.php';
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    header('Allow: POST');
+    echo json_encode(["status" => "error", "message" => "Only POST requests are allowed."]);
+    exit();
+}
+
 $input = json_decode(file_get_contents('php://input'), true);
 
-$name = trim($input['name'] ?? '');
-$email = trim($input['email'] ?? '');
-$phone = trim($input['phone'] ?? '');
-$password = trim($input['password'] ?? '');
-$role = strtolower(trim($input['role'] ?? 'member'));
+$name = trim((string)($input['name'] ?? ''));
+$email = trim((string)($input['email'] ?? ''));
+$phone = trim((string)($input['phone'] ?? ''));
+$password = (string)($input['password'] ?? '');
+$role = strtolower(trim((string)($input['role'] ?? 'member')));
 
 // Allowed roles
 if (!in_array($role, ['member', 'trainer', 'admin'])) {
     $role = 'member';
 }
 
-if (empty($name) || empty($email) || empty($password)) {
+if (empty($name) || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 8) {
     http_response_code(400);
-    echo json_encode(["status" => "error", "message" => "Name, email, and password are required."]);
+    echo json_encode(["status" => "error", "message" => "Name, a valid email, and a password of at least 8 characters are required."]);
     exit();
 }
 
@@ -63,8 +70,11 @@ try {
         "message" => "$roleLabel registered successfully!",
         "role" => $role
     ]);
-} catch (Exception $e) {
-    $db->rollBack();
+} catch (Throwable $exception) {
+    if ($db->inTransaction()) {
+        $db->rollBack();
+    }
+    error_log('FitLife registration failed: ' . $exception->getMessage());
     http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Registration failed: " . $e->getMessage()]);
+    echo json_encode(["status" => "error", "message" => "Registration failed. Please try again."]);
 }

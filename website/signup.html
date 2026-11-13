@@ -132,7 +132,7 @@
     </main>
 
     <script>
-      const API_BASE_URL = "http://localhost/fitlife_api/backend";
+      const API_BASE_URL = "https://fitness-hub-backend.vercel.app";
       const signupPlanId = new URLSearchParams(window.location.search).get("plan");
       const signupPlanNames = { basic: "Basic", standard: "Standard", premium: "Premium" };
       const signupPlan = signupPlanNames[signupPlanId] ? signupPlanId : null;
