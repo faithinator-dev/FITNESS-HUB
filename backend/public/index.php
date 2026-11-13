@@ -52,9 +52,22 @@ switch ($endpoint) {
         break;
 
     default:
+        $connectionInfo = $db->query(
+            'SELECT DATABASE() AS database_name, VERSION() AS server_version'
+        )->fetch();
+
         echo json_encode([
             "status" => "success",
-            "message" => "FitLife Central API Router is running.",
+            "message" => "FitLife Central API Router and database connection are running.",
+            "connection" => [
+                "status" => "connected",
+                "host" => "sql7.freesqldatabase.com",
+                "port" => 3306,
+                "database" => $connectionInfo["database_name"],
+                "user" => "sql7840675",
+                "server_version" => $connectionInfo["server_version"],
+                "charset" => "utf8mb4"
+            ],
             "available_endpoints" => ["login", "members", "register", "attendance", "routines", "stats"]
         ]);
         break;
