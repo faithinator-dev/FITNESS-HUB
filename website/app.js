@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://fitness-hub-backend.vercel.app";
+const API_BASE_URL = "/fitlife_api/backend";
 
 // Current Auth Session State
 let currentUser = JSON.parse(localStorage.getItem("fitlife_user")) || null;
